@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Timetable{% endblock %}
+{% block content %}
+<h2>📅 Your Timetable</h2>
+<table class="data-table">
+    <tr>
+        <th>Day</th><th>Period</th><th>Time</th><th>Subject</th><th>Faculty</th>
+    </tr>
+    {% for row in rows %}
+    <tr>
+        <td>{{ row.day }}</td>
+        <td>{{ row.period }}</td>
+        <td>{{ row.time_slot }}</td>
+        <td>{{ row.subject }}</td>
+        <td>{{ row.faculty_name }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No timetable found.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

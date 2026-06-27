@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-brand">🛠 Admin Panel</div>
+    <div class="nav-links">
+        <a href="{{ url_for('admin_logout') }}" class="logout-btn">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h2>Manage Chatbot Knowledge Base</h2>
+
+    <form method="POST" action="{{ url_for('admin_add') }}" class="admin-form">
+        <label>Category</label>
+        <input type="text" name="category" placeholder="e.g. faq, fees, admission" required>
+
+        <label>Question</label>
+        <input type="text" name="question" placeholder="What question will students ask?" required>
+
+        <label>Answer</label>
+        <textarea name="answer" placeholder="Type the answer here..." required></textarea>
+
+        <button type="submit">+ Add to Knowledge Base</button>
+    </form>
+
+    <h3>Existing Entries ({{ rows|length }})</h3>
+    <table class="data-table">
+        <tr><th>Category</th><th>Question</th><th>Answer</th><th>Action</th></tr>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row.category }}</td>
+            <td>{{ row.question }}</td>
+            <td>{{ row.answer }}</td>
+            <td><a href="{{ url_for('admin_delete', item_id=row.id) }}" class="delete-link">Delete</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+</body>
+</html>

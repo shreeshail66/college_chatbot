@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+{% block content %}
+<h2>Hi {{ name }}, ask me anything about the college 👋</h2>
+
+<div class="chat-box" id="chat-box">
+    <div class="message bot">
+        Hello! I can answer questions about timetable, faculty, attendance,
+        fees, admissions and general FAQs. What would you like to know?
+    </div>
+</div>
+
+<form id="chat-form" class="chat-input-row">
+    <input type="text" id="user-input" placeholder="Type your question..." autocomplete="off" required>
+    <button type="submit">Send</button>
+</form>
+
+<script src="{{ url_for('static', filename='chat.js') }}"></script>
+{% endblock %}

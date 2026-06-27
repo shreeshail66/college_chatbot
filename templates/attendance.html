@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block content %}
+<h2>📊 Your Attendance</h2>
+<table class="data-table">
+    <tr>
+        <th>Subject</th><th>Total Classes</th><th>Attended</th><th>Percentage</th>
+    </tr>
+    {% for row in data %}
+    <tr>
+        <td>{{ row.subject }}</td>
+        <td>{{ row.total }}</td>
+        <td>{{ row.attended }}</td>
+        <td class="{{ 'low-attendance' if row.percentage < 75 else 'ok-attendance' }}">
+            {{ row.percentage }}%
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">No attendance records found.</td></tr>
+    {% endfor %}
+</table>
+<p class="hint">⚠️ Minimum required attendance is 75%.</p>
+{% endblock %}
