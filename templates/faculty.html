@@ -1,3 +1,5 @@
+conn = get_connection()
+rows = conn.execute("SELECT * FROM faculty").fetchall()
 {% extends "base.html" %}
 {% block title %}Faculty{% endblock %}
 {% block content %}

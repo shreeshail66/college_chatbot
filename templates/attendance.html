@@ -1,6 +1,10 @@
+rows = conn.execute(
+    "SELECT * FROM attendance WHERE roll_no = ?", (session["roll_no"],)
+).fetchall()
 {% extends "base.html" %}
 {% block title %}Attendance{% endblock %}
 {% block content %}
+
 <h2>📊 Your Attendance</h2>
 <table class="data-table">
     <tr>

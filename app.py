@@ -7,16 +7,17 @@ Main Flask application. Run with:
 Then open http://127.0.0.1:5000 in your browser.
 """
 
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from database import get_connection
 from chatbot import get_chatbot_response
 
 app = Flask(__name__)
-app.secret_key = "change-this-secret-key"   # used to keep login sessions secure
+app.secret_key = os.getenv("SECRET_KEY", "dev-key-change-in-production")
 
 
 # ------------------------------------------------------------------
-# Helper decorators (simple, no extra library needed)
+# Helper decorators
 # ------------------------------------------------------------------
 def login_required(f):
     from functools import wraps
@@ -58,10 +59,16 @@ def login():
         password = request.form["password"].strip()
 
         conn = get_connection()
-        student = conn.execute(
-            "SELECT * FROM students WHERE roll_no = ? AND password = ?",
+        cur = conn.cursor()
+
+        cur.execute(
+            "SELECT * FROM students WHERE roll_no=%s AND password=%s",
             (roll_no, password)
-        ).fetchone()
+        )
+
+        student = cur.fetchone()
+
+        cur.close()
         conn.close()
 
         if student:
@@ -103,15 +110,21 @@ def api_chat():
 @login_required
 def timetable():
     conn = get_connection()
-    student = conn.execute(
-        "SELECT * FROM students WHERE roll_no = ?", (session["roll_no"],)
-    ).fetchone()
+    cur = conn.cursor()
 
-    rows = conn.execute(
-        "SELECT * FROM timetable WHERE department = ? AND year = ? "
-        "ORDER BY day, period",
+    cur.execute(
+        "SELECT * FROM students WHERE roll_no=%s",
+        (session["roll_no"],)
+    )
+    student = cur.fetchone()
+
+    cur.execute(
+        "SELECT * FROM timetable WHERE department=%s AND year=%s ORDER BY day,period",
         (student["department"], student["year"])
-    ).fetchall()
+    )
+    rows = cur.fetchall()
+
+    cur.close()
     conn.close()
 
     return render_template("timetable.html", rows=rows)
@@ -121,7 +134,10 @@ def timetable():
 @login_required
 def faculty():
     conn = get_connection()
-    rows = conn.execute("SELECT * FROM faculty").fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM faculty")
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return render_template("faculty.html", rows=rows)
 
@@ -130,12 +146,14 @@ def faculty():
 @login_required
 def attendance():
     conn = get_connection()
-    rows = conn.execute(
-        "SELECT * FROM attendance WHERE roll_no = ?", (session["roll_no"],)
-    ).fetchall()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM attendance WHERE roll_no = %s", (session["roll_no"],)
+    )
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
 
-    # Calculate percentage for each subject in Python (basic, beginner friendly)
     attendance_data = []
     for r in rows:
         pct = round((r["attended_classes"] / r["total_classes"]) * 100, 1) if r["total_classes"] else 0
@@ -153,9 +171,10 @@ def attendance():
 @login_required
 def faqs():
     conn = get_connection()
-    rows = conn.execute(
-        "SELECT * FROM knowledge_base WHERE category = 'faq'"
-    ).fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM knowledge_base WHERE category = 'faq'")
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return render_template("faqs.html", rows=rows)
 
@@ -171,10 +190,13 @@ def admin_login():
         password = request.form["password"].strip()
 
         conn = get_connection()
-        admin = conn.execute(
-            "SELECT * FROM admins WHERE username = ? AND password = ?",
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT * FROM admins WHERE username = %s AND password = %s",
             (username, password)
-        ).fetchone()
+        )
+        admin = cur.fetchone()
+        cur.close()
         conn.close()
 
         if admin:
@@ -196,7 +218,10 @@ def admin_logout():
 @admin_required
 def admin_dashboard():
     conn = get_connection()
-    rows = conn.execute("SELECT * FROM knowledge_base ORDER BY id DESC").fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM knowledge_base ORDER BY id DESC")
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return render_template("admin_dashboard.html", rows=rows)
 
@@ -209,11 +234,13 @@ def admin_add():
     answer = request.form["answer"].strip()
 
     conn = get_connection()
-    conn.execute(
-        "INSERT INTO knowledge_base (category, question, answer) VALUES (?,?,?)",
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO knowledge_base (category, question, answer) VALUES (%s,%s,%s)",
         (category, question, answer)
     )
     conn.commit()
+    cur.close()
     conn.close()
     return redirect(url_for("admin_dashboard"))
 
@@ -222,8 +249,10 @@ def admin_add():
 @admin_required
 def admin_delete(item_id):
     conn = get_connection()
-    conn.execute("DELETE FROM knowledge_base WHERE id = ?", (item_id,))
+    cur = conn.cursor()
+    cur.execute("DELETE FROM knowledge_base WHERE id = %s", (item_id,))
     conn.commit()
+    cur.close()
     conn.close()
     return redirect(url_for("admin_dashboard"))
 
